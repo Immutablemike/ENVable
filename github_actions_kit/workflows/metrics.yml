@@ -1,0 +1,130 @@
+name: 📊 Community Metrics
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  metrics:
+    name: 📈 Generate Community Report
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📊 Generate metrics
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          
+          // Get repository stats
+          const { data: repoData } = await github.rest.repos.get({ owner, repo });
+          
+          // Get issues and PRs from last 30 days
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          
+          const { data: issues } = await github.rest.issues.listForRepo({
+            owner,
+            repo,
+            state: 'all',
+            since: thirtyDaysAgo.toISOString(),
+            per_page: 100
+          });
+          
+          const { data: prs } = await github.rest.pulls.list({
+            owner,
+            repo,
+            state: 'all',
+            sort: 'created',
+            direction: 'desc',
+            per_page: 100
+          });
+          
+          // Calculate metrics
+          const recentIssues = issues.filter(issue => 
+            !issue.pull_request && 
+            new Date(issue.created_at) > thirtyDaysAgo
+          );
+          
+          const recentPRs = prs.filter(pr => 
+            new Date(pr.created_at) > thirtyDaysAgo
+          );
+          
+          const mergedPRs = recentPRs.filter(pr => pr.merged_at);
+          
+          // Generate report
+          const report = `# 📊 GitTalker Community Metrics
+          
+          *Generated on ${new Date().toISOString().split('T')[0]}*
+          
+          ## 🌟 Repository Health
+          
+          - **Stars**: ${repoData.stargazers_count}
+          - **Forks**: ${repoData.forks_count}
+          - **Watchers**: ${repoData.subscribers_count}
+          - **Open Issues**: ${repoData.open_issues_count}
+          
+          ## 📈 Recent Activity (Last 30 Days)
+          
+          - **New Issues**: ${recentIssues.length}
+          - **New PRs**: ${recentPRs.length}
+          - **Merged PRs**: ${mergedPRs.length}
+          - **Contributors**: ${new Set(recentPRs.map(pr => pr.user.login)).size}
+          
+          ## 🤖 Agent Profile Usage
+          
+          Based on recent activity involving AGENT_Profiles:
+          `;
+          
+          // Check for agent profile related activity
+          const agentIssues = issues.filter(issue => 
+            issue.title.toLowerCase().includes('agent') || 
+            issue.title.toLowerCase().includes('profile') ||
+            issue.body?.toLowerCase().includes('agent_profiles')
+          );
+          
+          const agentPRs = prs.filter(pr => 
+            pr.title.toLowerCase().includes('agent') || 
+            pr.title.toLowerCase().includes('profile') ||
+            pr.changed_files?.some(file => file.filename.startsWith('AGENT_Profiles/'))
+          );
+          
+          const finalReport = report + `
+          - **Agent-related Issues**: ${agentIssues.length}
+          - **Agent Profile PRs**: ${agentPRs.length}
+          
+          ## 🎯 Community Engagement Tips
+          
+          ${repoData.stargazers_count < 10 ? 
+            "- Share GitTalker in dev communities to gain more visibility\n- Consider writing blog posts about eliminating daily standups" :
+            "- Great momentum! Keep engaging with the community\n- Consider creating video demos of different agent personalities"
+          }
+          
+          ${recentPRs.length === 0 ? 
+            "- No recent PRs - consider reaching out to contributors\n- Add 'good first issue' labels to encourage participation" :
+            "- Active PR activity is great for project health!\n- Consider adding contributor recognition"
+          }
+          
+          ---
+          *This report helps track GitTalker's growth as a dev-client communication solution.*
+          `;
+          
+          // Save report
+          const fs = require('fs');
+          fs.writeFileSync('COMMUNITY_METRICS.md', finalReport);
+
+    - name: 📤 Commit metrics report
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add COMMUNITY_METRICS.md
+        git diff --staged --quiet || git commit -m "📊 Update community metrics report"
+        git push

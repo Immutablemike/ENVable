@@ -1,0 +1,117 @@
+name: 🏷️ Auto Label PRs
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  label:
+    name: 🏷️ Auto Label
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🏷️ Label PR based on changes
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo, number } = context.issue;
+          
+          // Get PR files
+          const { data: files } = await github.rest.pulls.listFiles({
+            owner,
+            repo,
+            pull_number: number,
+          });
+          
+          const labels = [];
+          
+          // Check file patterns and add labels
+          for (const file of files) {
+            const path = file.filename;
+            
+            if (path.startsWith('AGENT_Profiles/')) {
+              labels.push('🤖 agent-profiles');
+            }
+            
+            if (path.startsWith('src/')) {
+              labels.push('💻 core');
+            }
+            
+            if (path.startsWith('.github/')) {
+              labels.push('🔧 ci/cd');
+            }
+            
+            if (path === 'README.md' || path.startsWith('docs/')) {
+              labels.push('📚 documentation');
+            }
+            
+            if (path.includes('test') || path.includes('spec')) {
+              labels.push('🧪 tests');
+            }
+            
+            if (path === 'requirements.txt' || path === 'setup.py' || path === 'pyproject.toml') {
+              labels.push('📦 dependencies');
+            }
+          }
+          
+          // Size labels based on changes
+          const totalChanges = files.reduce((sum, file) => sum + file.changes, 0);
+          
+          if (totalChanges < 10) {
+            labels.push('size/XS');
+          } else if (totalChanges < 50) {
+            labels.push('size/S');
+          } else if (totalChanges < 200) {
+            labels.push('size/M');
+          } else if (totalChanges < 500) {
+            labels.push('size/L');
+          } else {
+            labels.push('size/XL');
+          }
+          
+          // Remove duplicates
+          const uniqueLabels = [...new Set(labels)];
+          
+          if (uniqueLabels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: number,
+              labels: uniqueLabels,
+            });
+          }
+
+  auto-assign:
+    name: 👥 Auto Assign Reviewers
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+    - name: 👥 Request review for agent profiles
+      if: contains(github.event.pull_request.changed_files, 'AGENT_Profiles/')
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo, number } = context.issue;
+          
+          await github.rest.pulls.requestReviewers({
+            owner,
+            repo,
+            pull_number: number,
+            reviewers: ['${{ github.repository_owner }}'], // Auto-assign repo owner for agent profile changes
+          });
+          
+          await github.rest.issues.createComment({
+            owner,
+            repo,
+            issue_number: number,
+            body: '🤖 **Agent Profile Changes Detected**\n\nThis PR modifies agent personalities. Please review carefully to ensure:\n- JSON syntax is valid\n- Required fields are present\n- Personality is appropriate for professional client communication\n- Style is consistent with GitTalker\'s dev-client bridge purpose'
+          });

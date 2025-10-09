@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  envable:
+    build: .
+    container_name: envable-app
+    environment:
+      - ENV=development
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./src:/app/src
+      - ./sync_config.json:/app/sync_config.json:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import src.env_processor; print('✅ ENVable healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: envable-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+networks:
+  default:
+    name: envable-network
