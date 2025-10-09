@@ -1,0 +1,15 @@
+{
+  "repos": [
+    "your-repo-name"
+  ],
+  "sync_patterns": [
+    "*_API_KEY",
+    "*_TOKEN",
+    "*_SECRET"
+  ],
+  "exclude_patterns": [
+    "*PASSWORD*",
+    "*_PAT"
+  ],
+  "debounce_seconds": 3
+}

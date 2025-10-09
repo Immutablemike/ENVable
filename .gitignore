@@ -1,0 +1,114 @@
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+.env.development
+config/organized_env.yaml
+config/actual_env.yaml
+*.env
+!.env.template
+!.env.example
+
+# Credentials and secrets (allow safe configs)
+credentials/
+!sync_config.json
+!key_rotation/rotation_config.json
+!**/example.json
+!**/template.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# API Keys and secrets
+*.key
+*.pem
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+rotation_history.json
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# ENV_Holding files - contain production secrets
+ENV_Holding.yaml
+ENV_Holding_*.yaml
+
+# ENVThing Security - Added by consolidation script
+ENV_Holding*.yaml
+production_secrets_vault.yaml
+credential_index.json
+**/production_*
+**/*_secrets_*
+credentials/**/*credential*
+!**/credentials/example*.json
+!**/credentials/template*.json

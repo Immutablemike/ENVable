@@ -1,0 +1,61 @@
+name: 📚 Documentation
+description: Report an issue with documentation
+title: "[Docs]: "
+labels: ["documentation", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve our documentation! 📖
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation type
+      description: What type of documentation issue is this?
+      options:
+        - Missing documentation
+        - Incorrect information
+        - Unclear or confusing
+        - Outdated information
+        - Broken links
+        - Formatting issues
+        - Translation needed
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Documentation location
+      description: Where did you find this issue?
+      placeholder: |
+        - URL: https://example.com/docs/page
+        - File: README.md, line 42
+        - Section: "Getting Started" > "Installation"
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue-description
+    attributes:
+      label: Issue description
+      description: What's wrong with the documentation?
+      placeholder: Describe the documentation issue you found...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested fix
+      description: How should this be corrected?
+      placeholder: Describe how you think this should be fixed or improved...
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Any other context about the documentation issue
+      placeholder: Add any other context about the documentation issue...

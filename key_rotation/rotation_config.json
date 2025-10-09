@@ -1,0 +1,61 @@
+{
+  "rotation_policies": {
+    "high_security": {
+      "schedule_days": 30,
+      "credentials": ["*_SECRET_KEY", "*_PRIVATE_KEY", "JWT_*"],
+      "notification_days_before": 7,
+      "auto_rotate": false,
+      "require_approval": true
+    },
+    "standard_security": {
+      "schedule_days": 90,
+      "credentials": ["*_API_KEY", "*_TOKEN"],
+      "notification_days_before": 14,
+      "auto_rotate": true,
+      "require_approval": false
+    },
+    "low_security": {
+      "schedule_days": 180,
+      "credentials": ["*_PUBLIC_*", "*_ANALYTICS_*"],
+      "notification_days_before": 30,
+      "auto_rotate": true,
+      "require_approval": false
+    }
+  },
+  "providers": {
+    "openai": {
+      "api_endpoint": "https://api.openai.com/v1/api_keys",
+      "rotation_method": "api",
+      "credentials": ["OPENAI_API_KEY", "OPENAI_ADMIN_KEY", "OPENAI_PROJECT_KEY"],
+      "policy": "high_security"
+    },
+    "stripe": {
+      "api_endpoint": "https://api.stripe.com/v1/api_keys",
+      "rotation_method": "api",
+      "credentials": ["STRIPE_SECRET_KEY", "STRIPE_PUBLISHABLE_KEY"],
+      "policy": "high_security"
+    },
+    "github": {
+      "api_endpoint": "https://api.github.com/user/tokens",
+      "rotation_method": "manual",
+      "credentials": ["*_PAT_TOKEN", "*_GITHUB_TOKEN"],
+      "policy": "standard_security"
+    },
+    "anthropic": {
+      "api_endpoint": "https://api.anthropic.com/v1/keys",
+      "rotation_method": "manual",
+      "credentials": ["ANTHROPIC_API_KEY", "CLAUDE_*"],
+      "policy": "high_security"
+    }
+  },
+  "notifications": {
+    "slack_webhook": "SLACK_ROTATION_WEBHOOK",
+    "email_recipients": ["admin@company.com"],
+    "channels": ["slack", "email", "log"]
+  },
+  "audit": {
+    "log_file": "rotation_audit.log",
+    "retention_days": 365,
+    "compliance_reports": ["SOC2", "GDPR", "PCI"]
+  }
+}
