@@ -1,0 +1,47 @@
+{
+  "monitoring_interval": 300,
+  "cost_thresholds": {
+    "openai": {
+      "hourly": 10.0,
+      "daily": 100.0,
+      "monthly": 2000.0
+    },
+    "github_actions": {
+      "hourly": 5.0,
+      "daily": 50.0,
+      "monthly": 1000.0
+    },
+    "stripe": {
+      "hourly": 50.0,
+      "daily": 500.0,
+      "monthly": 10000.0
+    },
+    "supabase": {
+      "hourly": 5.0,
+      "daily": 25.0,
+      "monthly": 500.0
+    },
+    "cloudflare": {
+      "hourly": 2.0,
+      "daily": 20.0,
+      "monthly": 400.0
+    }
+  },
+  "usage_spike_multiplier": 3.0,
+  "circuit_breaker": {
+    "enabled": true,
+    "threshold_multiplier": 5.0,
+    "cooldown_minutes": 30
+  },
+  "alert_settings": {
+    "cooldown_minutes": 30,
+    "enable_daily_summary": true,
+    "daily_summary_time": "09:00",
+    "enable_weekly_reports": true
+  },
+  "monitoring_windows": {
+    "baseline_hours": 24,
+    "analysis_window_hours": 1,
+    "trend_analysis_days": 7
+  }
+}
