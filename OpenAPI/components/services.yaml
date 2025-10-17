@@ -1,0 +1,76 @@
+# Service and Credential Type Schemas
+# Modular component definitions for ENVable API
+
+ServiceType:
+  type: string
+  enum:
+    - openai        # OpenAI API services
+    - github        # GitHub and GitHub Actions  
+    - stripe        # Payment processing
+    - supabase      # Database and authentication
+    - cloudflare    # CDN and R2 storage
+    - mongodb       # Database services
+    - vercel        # Deployment platform
+    - airtable      # Database and workflows
+    - telegram      # Bot notifications
+    - slack         # Team notifications  
+    - discord       # Community notifications
+    - mailgun       # Email services
+    - sendgrid      # Email marketing
+    - twilio        # SMS and voice
+    - aws           # Amazon Web Services
+    - google        # Google Cloud Platform
+    - microsoft     # Microsoft Azure
+  description: Supported service types for credential management
+  example: openai
+
+CredentialType:
+  type: string
+  enum:
+    - api_key           # Standard API keys
+    - token             # Bearer tokens and PATs
+    - url               # Service URLs and endpoints
+    - secret            # Encrypted secrets
+    - certificate       # SSL certificates
+    - oauth_token       # OAuth access tokens
+    - webhook_url       # Webhook endpoints
+    - connection_string # Database connection strings
+  description: Types of credentials that can be stored
+  example: api_key
+
+ServiceInfo:
+  type: object
+  properties:
+    service_type:
+      $ref: '#/ServiceType'
+    display_name:
+      type: string
+      description: Human-readable service name
+      example: "OpenAI API"
+    description:
+      type: string
+      description: Service description
+      example: "AI language model and API services"
+    supported_credential_types:
+      type: array
+      items:
+        $ref: '#/CredentialType'
+      description: Credential types this service supports
+      example: ["api_key", "token"]
+    documentation_url:
+      type: string
+      format: uri
+      nullable: true
+      description: Link to service documentation
+      example: "https://platform.openai.com/docs"
+    default_url:
+      type: string
+      format: uri
+      nullable: true
+      description: Default service URL
+      example: "https://api.openai.com/v1"
+  required:
+    - service_type
+    - display_name
+    - description
+    - supported_credential_types

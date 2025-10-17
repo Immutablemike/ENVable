@@ -1,0 +1,484 @@
+openapi: 3.0.3
+info:
+  title: ENVable API
+  description: |
+    Public API specification for credential and service management.
+    
+    This API provides standardized endpoints for managing credentials,
+    services, and configurations in a secure and type-safe manner.
+  version: 1.0.0
+  contact:
+    name: ENVable Team
+    email: support@envable.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.envable.com/v1
+    description: Production API server
+  - url: https://staging-api.envable.com/v1
+    description: Staging API server
+
+paths:
+  /credentials:
+    get:
+      summary: List credentials
+      description: Retrieve a list of all credentials
+      operationId: listCredentials
+      tags:
+        - Credentials
+      parameters:
+        - name: service
+          in: query
+          description: Filter by service type
+          schema:
+            $ref: '#/components/schemas/ServiceType'
+        - name: active_only
+          in: query
+          description: Show only active credentials
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: List of credentials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CredentialSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create credential
+      description: Add a new credential to the system
+      operationId: createCredential
+      tags:
+        - Credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCredentialRequest'
+      responses:
+        '201':
+          description: Credential created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /credentials/{credentialId}:
+    get:
+      summary: Get credential
+      description: Retrieve a specific credential by ID
+      operationId: getCredential
+      tags:
+        - Credentials
+      parameters:
+        - name: credentialId
+          in: path
+          required: true
+          description: Credential identifier
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Credential details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update credential
+      description: Update an existing credential
+      operationId: updateCredential
+      tags:
+        - Credentials
+      parameters:
+        - name: credentialId
+          in: path
+          required: true
+          description: Credential identifier
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCredentialRequest'
+      responses:
+        '200':
+          description: Credential updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete credential
+      description: Remove a credential from the system
+      operationId: deleteCredential
+      tags:
+        - Credentials
+      parameters:
+        - name: credentialId
+          in: path
+          required: true
+          description: Credential identifier
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Credential deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /services:
+    get:
+      summary: List available services
+      description: Get list of all supported service types
+      operationId: listServices
+      tags:
+        - Services
+      responses:
+        '200':
+          description: List of available services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceInfo'
+
+  /health:
+    get:
+      summary: Health check
+      description: Check API health status
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+components:
+  schemas:
+    ServiceType:
+      type: string
+      enum:
+        - openai
+        - github
+        - stripe
+        - supabase
+        - cloudflare
+        - mongodb
+        - vercel
+        - airtable
+        - telegram
+        - slack
+        - discord
+        - mailgun
+        - sendgrid
+        - twilio
+        - aws
+        - google
+        - microsoft
+      description: Supported service types for credential management
+
+    CredentialType:
+      type: string
+      enum:
+        - api_key
+        - token
+        - url
+        - secret
+        - certificate
+        - oauth_token
+        - webhook_url
+        - connection_string
+      description: Types of credentials that can be stored
+
+    CredentialSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique credential identifier
+        name:
+          type: string
+          description: Human-readable credential name
+        service:
+          $ref: '#/components/schemas/ServiceType'
+        credential_type:
+          $ref: '#/components/schemas/CredentialType'
+        is_active:
+          type: boolean
+          description: Whether the credential is currently active
+        created_at:
+          type: string
+          format: date-time
+          description: When the credential was created
+        last_used:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the credential was last accessed
+      required:
+        - id
+        - name
+        - service
+        - credential_type
+        - is_active
+        - created_at
+
+    CredentialResponse:
+      allOf:
+        - $ref: '#/components/schemas/CredentialSummary'
+        - type: object
+          properties:
+            description:
+              type: string
+              nullable: true
+              description: Optional credential description
+            tags:
+              type: array
+              items:
+                type: string
+              description: Tags for organization
+            metadata:
+              type: object
+              additionalProperties: true
+              description: Additional metadata
+
+    CreateCredentialRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Human-readable credential name
+          maxLength: 255
+        service:
+          $ref: '#/components/schemas/ServiceType'
+        credential_type:
+          $ref: '#/components/schemas/CredentialType'
+        value:
+          type: string
+          description: The credential value (will be encrypted)
+          format: password
+        description:
+          type: string
+          nullable: true
+          description: Optional description
+          maxLength: 1000
+        tags:
+          type: array
+          items:
+            type: string
+          description: Organization tags
+        is_active:
+          type: boolean
+          default: true
+          description: Whether credential should be active
+      required:
+        - name
+        - service
+        - credential_type
+        - value
+
+    UpdateCredentialRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Human-readable credential name
+          maxLength: 255
+        value:
+          type: string
+          description: Updated credential value
+          format: password
+        description:
+          type: string
+          nullable: true
+          description: Updated description
+          maxLength: 1000
+        tags:
+          type: array
+          items:
+            type: string
+          description: Updated tags
+        is_active:
+          type: boolean
+          description: Whether credential should be active
+
+    ServiceInfo:
+      type: object
+      properties:
+        service_type:
+          $ref: '#/components/schemas/ServiceType'
+        display_name:
+          type: string
+          description: Human-readable service name
+        description:
+          type: string
+          description: Service description
+        supported_credential_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/CredentialType'
+          description: Credential types this service supports
+        documentation_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Link to service documentation
+      required:
+        - service_type
+        - display_name
+        - description
+        - supported_credential_types
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+          description: API version
+        dependencies:
+          type: object
+          properties:
+            database:
+              type: string
+              enum:
+                - healthy
+                - unhealthy
+            cache:
+              type: string
+              enum:
+                - healthy
+                - unhealthy
+      required:
+        - status
+        - timestamp
+        - version
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error context
+        timestamp:
+          type: string
+          format: date-time
+        request_id:
+          type: string
+          description: Unique request identifier for tracking
+      required:
+        - error
+        - message
+        - timestamp
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Resource conflict - typically duplicate data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key authentication
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+tags:
+  - name: Credentials
+    description: Credential management operations
+  - name: Services
+    description: Service information and metadata
+  - name: Health
+    description: API health and monitoring

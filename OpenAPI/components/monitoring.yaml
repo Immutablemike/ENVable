@@ -1,0 +1,232 @@
+# Monitoring and Health Schemas
+# Schema definitions for system monitoring and health checks
+
+HealthResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      enum:
+        - healthy
+        - degraded
+        - unhealthy
+      description: Overall system health status
+      example: healthy
+    timestamp:
+      type: string
+      format: date-time
+      description: Health check timestamp
+      example: "2024-01-20T15:30:00Z"
+    version:
+      type: string
+      description: API version
+      example: "1.0.0"
+    uptime_seconds:
+      type: integer
+      description: System uptime in seconds
+      example: 86400
+    dependencies:
+      type: object
+      properties:
+        database:
+          $ref: '#/DependencyStatus'
+        cache:
+          $ref: '#/DependencyStatus'
+        storage:
+          $ref: '#/DependencyStatus'
+        external_apis:
+          type: object
+          additionalProperties:
+            $ref: '#/DependencyStatus'
+          example:
+            openai: 
+              status: healthy
+              response_time_ms: 150
+            github:
+              status: healthy
+              response_time_ms: 89
+    metrics:
+      type: object
+      properties:
+        active_credentials:
+          type: integer
+          description: Number of active credentials
+          example: 42
+        total_api_calls_today:
+          type: integer
+          description: API calls made today
+          example: 1507
+        average_response_time_ms:
+          type: number
+          description: Average response time
+          example: 125.7
+        error_rate_percent:
+          type: number
+          description: Error rate percentage
+          example: 0.05
+  required:
+    - status
+    - timestamp
+    - version
+
+DependencyStatus:
+  type: object
+  properties:
+    status:
+      type: string
+      enum:
+        - healthy
+        - degraded
+        - unhealthy
+      description: Dependency health status
+      example: healthy
+    response_time_ms:
+      type: integer
+      description: Response time in milliseconds
+      example: 45
+      nullable: true
+    last_checked:
+      type: string
+      format: date-time
+      description: When dependency was last checked
+      example: "2024-01-20T15:30:00Z"
+    error_message:
+      type: string
+      nullable: true
+      description: Error message if unhealthy
+      example: "Connection timeout"
+  required:
+    - status
+    - last_checked
+
+MonitoringAlert:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      description: Alert identifier
+      example: "550e8400-e29b-41d4-a716-446655440001"
+    severity:
+      type: string
+      enum:
+        - info
+        - warning
+        - error
+        - critical
+      description: Alert severity level
+      example: warning
+    title:
+      type: string
+      description: Alert title
+      example: "High API error rate detected"
+    message:
+      type: string
+      description: Detailed alert message
+      example: "API error rate has exceeded 1% threshold"
+    source:
+      type: string
+      description: Alert source component
+      example: "credential-validator"
+    triggered_at:
+      type: string
+      format: date-time
+      description: When alert was triggered
+      example: "2024-01-20T15:25:00Z"
+    acknowledged:
+      type: boolean
+      description: Whether alert has been acknowledged
+      example: false
+    acknowledged_by:
+      type: string
+      nullable: true
+      description: Who acknowledged the alert
+      example: "admin@envable.com"
+    resolved_at:
+      type: string
+      format: date-time
+      nullable: true
+      description: When alert was resolved
+    metadata:
+      type: object
+      additionalProperties: true
+      description: Additional alert context
+      example:
+        error_rate: 1.2
+        threshold: 1.0
+        affected_services: ["openai", "github"]
+  required:
+    - id
+    - severity
+    - title
+    - message
+    - source
+    - triggered_at
+    - acknowledged
+
+SystemMetrics:
+  type: object
+  properties:
+    timestamp:
+      type: string
+      format: date-time
+      description: Metrics collection timestamp
+      example: "2024-01-20T15:30:00Z"
+    api_metrics:
+      type: object
+      properties:
+        total_requests:
+          type: integer
+          example: 15420
+        successful_requests:
+          type: integer
+          example: 15358
+        failed_requests:
+          type: integer
+          example: 62
+        average_response_time_ms:
+          type: number
+          example: 125.7
+        p95_response_time_ms:
+          type: number
+          example: 340.2
+        requests_per_minute:
+          type: number
+          example: 45.7
+    credential_metrics:
+      type: object
+      properties:
+        total_credentials:
+          type: integer
+          example: 156
+        active_credentials:
+          type: integer
+          example: 142
+        expired_credentials:
+          type: integer
+          example: 8
+        credentials_by_service:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            openai: 23
+            github: 45
+            stripe: 12
+    system_metrics:
+      type: object
+      properties:
+        cpu_usage_percent:
+          type: number
+          example: 35.7
+        memory_usage_percent:
+          type: number
+          example: 68.2
+        disk_usage_percent:
+          type: number
+          example: 45.8
+        active_connections:
+          type: integer
+          example: 127
+  required:
+    - timestamp
